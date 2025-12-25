@@ -1,23 +1,23 @@
 # AI for the Rest - Environment Setup
 
-A simple PowerShell script to set up a development environment on Windows.
+A simple PowerShell script to set up a development environment on Windows with AI coding assistants.
+
+## Quick Install
+
+Open PowerShell and run:
+
+```powershell
+irm https://raw.githubusercontent.com/rlancer/dangerous-ai/refs/heads/main/setup.ps1 | iex
+```
 
 ## Requirements
 
 - Windows 10/11
 - Classic PowerShell (not PowerShell Core)
 
-## Usage
-
-Open PowerShell and run:
-
-```powershell
-.\setup.ps1
-```
-
 ## What Gets Installed
 
-The script installs [Scoop](https://scoop.sh/) and the following packages:
+### Via Scoop
 
 | Package | Description |
 |---------|-------------|
@@ -33,21 +33,34 @@ The script installs [Scoop](https://scoop.sh/) and the following packages:
 | starship | Cross-shell prompt |
 | touch | Create files |
 | vcredist2022 | Visual C++ Redistributable |
+| vscode | Visual Studio Code |
 | which | Locate commands |
 | windows-terminal | Modern terminal |
 
-Additionally, the script installs via mise:
+### Via Mise
 
 | Package | Description |
 |---------|-------------|
 | bun | Fast JavaScript runtime |
-| claude-code | Anthropic's CLI for Claude |
+
+### AI CLI Tools (via Bun)
+
+| Package | Command | Description |
+|---------|---------|-------------|
+| @anthropic-ai/claude-code | `claude` | Anthropic's CLI for Claude |
+| @openai/codex | `codex` | OpenAI's Codex CLI |
+| @google/gemini-cli | `gemini` | Google's Gemini CLI |
 
 ## Post-Setup
 
-After installation, you may want to:
+The script automatically configures PowerShell profiles for mise and starship. After installation:
 
 1. Open Windows Terminal
-2. Configure Starship by creating `~/.config/starship.toml`
-3. Set your Anthropic API key: `$env:ANTHROPIC_API_KEY = "your-key"`
-4. Run `claude` to start using Claude Code
+2. (Optional) Configure Starship by creating `~/.config/starship.toml`
+3. Set your API keys:
+   ```powershell
+   $env:ANTHROPIC_API_KEY = "your-key"
+   $env:OPENAI_API_KEY = "your-key"
+   $env:GEMINI_API_KEY = "your-key"
+   ```
+4. Run `claude`, `codex`, or `gemini` to start coding with AI
