@@ -3,9 +3,13 @@
 
 Write-Host "Setting up your development environment..." -ForegroundColor Cyan
 
-# Set execution policy for current user
+# Set execution policy for current user (ignore if already set by group policy)
 Write-Host "`nSetting execution policy..." -ForegroundColor Yellow
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+try {
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force -ErrorAction Stop
+} catch {
+    Write-Host "  Execution policy already configured (current: $(Get-ExecutionPolicy))" -ForegroundColor Gray
+}
 
 # Install Scoop
 Write-Host "`nInstalling Scoop..." -ForegroundColor Yellow

@@ -1,67 +1,66 @@
 # Test wrapper for setup.ps1
 $ErrorActionPreference = 'Continue'
-$logFile = "C:\Users\WDAGUtilityAccount\Desktop\setup-log.txt"
+$transcriptFile = "C:\Users\WDAGUtilityAccount\Desktop\setup-transcript.txt"
 
-function Log {
-    param([string]$Message)
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$timestamp - $Message" | Tee-Object -FilePath $logFile -Append
-}
+# Start transcript to capture ALL output
+Start-Transcript -Path $transcriptFile -Force
 
-Log "Starting setup.ps1 test..."
-Log "PowerShell Version: $($PSVersionTable.PSVersion)"
+Write-Host "Starting setup.ps1 test..."
+Write-Host "PowerShell Version: $($PSVersionTable.PSVersion)"
 
 try {
-    # Run the setup script
-    & "C:\TestFiles\setup.ps1" 2>&1 | ForEach-Object {
-        Log $_
-    }
-    Log "Setup script completed successfully!"
+    # Dot-source the setup script so it runs in this session
+    . "C:\TestFiles\setup.ps1"
+    Write-Host "Setup script completed successfully!"
 } catch {
-    Log "ERROR: $_"
+    Write-Host "ERROR: $_"
+    Write-Host $_.ScriptStackTrace
 }
 
 # Verify installations
-Log "
+Write-Host "
 === Verification ==="
 
-Log "Checking scoop..."
+Write-Host "Checking scoop..."
 if (Get-Command scoop -ErrorAction SilentlyContinue) {
-    Log "  scoop: INSTALLED"
-    Log "  Installed packages:"
-    scoop list 2>&1 | ForEach-Object { Log "    $_" }
+    Write-Host "  scoop: INSTALLED"
+    Write-Host "  Installed packages:"
+    scoop list
 } else {
-    Log "  scoop: NOT FOUND"
+    Write-Host "  scoop: NOT FOUND"
 }
 
-Log "
+Write-Host "
 Checking mise..."
 if (Get-Command mise -ErrorAction SilentlyContinue) {
-    Log "  mise: INSTALLED"
-    mise list 2>&1 | ForEach-Object { Log "    $_" }
+    Write-Host "  mise: INSTALLED"
+    mise list
 } else {
-    Log "  mise: NOT FOUND"
+    Write-Host "  mise: NOT FOUND"
 }
 
-Log "
+Write-Host "
 Checking bun..."
 if (Get-Command bun -ErrorAction SilentlyContinue) {
-    Log "  bun: INSTALLED ($(bun --version))"
+    Write-Host "  bun: INSTALLED ($(bun --version))"
 } else {
-    Log "  bun: NOT FOUND"
+    Write-Host "  bun: NOT FOUND"
 }
 
-Log "
+Write-Host "
 Checking claude..."
 if (Get-Command claude -ErrorAction SilentlyContinue) {
-    Log "  claude: INSTALLED"
+    Write-Host "  claude: INSTALLED"
 } else {
-    Log "  claude: NOT FOUND"
+    Write-Host "  claude: NOT FOUND"
 }
 
-Log "
+Write-Host "
 === Test Complete ==="
-Log "Log saved to: $logFile"
+
+Stop-Transcript
+
+Write-Host "Transcript saved to: $transcriptFile"
 
 # Keep window open
 Read-Host "

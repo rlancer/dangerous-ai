@@ -23,63 +23,62 @@ if ($RunTest) {
     $testWrapper = @"
 # Test wrapper for setup.ps1
 `$ErrorActionPreference = 'Continue'
-`$logFile = "C:\Users\WDAGUtilityAccount\Desktop\setup-log.txt"
+`$transcriptFile = "C:\Users\WDAGUtilityAccount\Desktop\setup-transcript.txt"
 
-function Log {
-    param([string]`$Message)
-    `$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "`$timestamp - `$Message" | Tee-Object -FilePath `$logFile -Append
-}
+# Start transcript to capture ALL output
+Start-Transcript -Path `$transcriptFile -Force
 
-Log "Starting setup.ps1 test..."
-Log "PowerShell Version: `$(`$PSVersionTable.PSVersion)"
+Write-Host "Starting setup.ps1 test..."
+Write-Host "PowerShell Version: `$(`$PSVersionTable.PSVersion)"
 
 try {
-    # Run the setup script
-    & "C:\TestFiles\setup.ps1" 2>&1 | ForEach-Object {
-        Log `$_
-    }
-    Log "Setup script completed successfully!"
+    # Dot-source the setup script so it runs in this session
+    . "C:\TestFiles\setup.ps1"
+    Write-Host "Setup script completed successfully!"
 } catch {
-    Log "ERROR: `$_"
+    Write-Host "ERROR: `$_"
+    Write-Host `$_.ScriptStackTrace
 }
 
 # Verify installations
-Log "`n=== Verification ==="
+Write-Host "`n=== Verification ==="
 
-Log "Checking scoop..."
+Write-Host "Checking scoop..."
 if (Get-Command scoop -ErrorAction SilentlyContinue) {
-    Log "  scoop: INSTALLED"
-    Log "  Installed packages:"
-    scoop list 2>&1 | ForEach-Object { Log "    `$_" }
+    Write-Host "  scoop: INSTALLED"
+    Write-Host "  Installed packages:"
+    scoop list
 } else {
-    Log "  scoop: NOT FOUND"
+    Write-Host "  scoop: NOT FOUND"
 }
 
-Log "`nChecking mise..."
+Write-Host "`nChecking mise..."
 if (Get-Command mise -ErrorAction SilentlyContinue) {
-    Log "  mise: INSTALLED"
-    mise list 2>&1 | ForEach-Object { Log "    `$_" }
+    Write-Host "  mise: INSTALLED"
+    mise list
 } else {
-    Log "  mise: NOT FOUND"
+    Write-Host "  mise: NOT FOUND"
 }
 
-Log "`nChecking bun..."
+Write-Host "`nChecking bun..."
 if (Get-Command bun -ErrorAction SilentlyContinue) {
-    Log "  bun: INSTALLED (`$(bun --version))"
+    Write-Host "  bun: INSTALLED (`$(bun --version))"
 } else {
-    Log "  bun: NOT FOUND"
+    Write-Host "  bun: NOT FOUND"
 }
 
-Log "`nChecking claude..."
+Write-Host "`nChecking claude..."
 if (Get-Command claude -ErrorAction SilentlyContinue) {
-    Log "  claude: INSTALLED"
+    Write-Host "  claude: INSTALLED"
 } else {
-    Log "  claude: NOT FOUND"
+    Write-Host "  claude: NOT FOUND"
 }
 
-Log "`n=== Test Complete ==="
-Log "Log saved to: `$logFile"
+Write-Host "`n=== Test Complete ==="
+
+Stop-Transcript
+
+Write-Host "Transcript saved to: `$transcriptFile"
 
 # Keep window open
 Read-Host "`nPress Enter to close"
@@ -113,7 +112,7 @@ Read-Host "`nPress Enter to close"
     Write-Host "  1. Mount this folder as C:\TestFiles (read-only)" -ForegroundColor Gray
     Write-Host "  2. Run setup.ps1 automatically" -ForegroundColor Gray
     Write-Host "  3. Verify all installations" -ForegroundColor Gray
-    Write-Host "  4. Save a log to the sandbox desktop" -ForegroundColor Gray
+    Write-Host "  4. Save transcript to sandbox desktop (setup-transcript.txt)" -ForegroundColor Gray
     Write-Host ""
 
     # Launch the sandbox
