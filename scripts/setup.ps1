@@ -91,24 +91,34 @@ foreach ($package in $packages) {
 # Refresh PATH to include newly installed tools (mise, etc.)
 $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "Machine")
 
-# Install bun via official installer (works in both legacy and modern PowerShell)
+# Install bun via scoop (using pwsh since legacy PowerShell can't install bun directly)
 Write-Host "`nInstalling bun..." -ForegroundColor Yellow
-$bunExe = "$env:USERPROFILE\.bun\bin\bun.exe"
-if (Test-Path $bunExe) {
-    $bunVersion = & $bunExe --version 2>$null
+if (scoop list bun 2>$null | Select-String "bun") {
+    $bunVersion = bun --version 2>$null
     Write-Host "  bun already installed ($bunVersion)" -ForegroundColor Gray
 } else {
-    Write-Host "  Installing via official installer..." -ForegroundColor Gray
-    Invoke-RestMethod -Uri https://bun.sh/install.ps1 | Invoke-Expression
+    Write-Host "  Installing via scoop (using pwsh)..." -ForegroundColor Gray
+    pwsh -Command "scoop install bun" 2>&1 | Write-Host
+    # Refresh PATH to include bun
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "Machine")
 }
 
-# Add bun to PATH for current session
-$bunBinPath = "$env:USERPROFILE\.bun\bin"
-if ($env:PATH -notlike "*$bunBinPath*") {
-    $env:PATH = "$bunBinPath;$env:PATH"
+# Check for old native bun installer (conflicts with scoop bun)
+$nativeBunPath = "$env:USERPROFILE\.bun\bin\bun.exe"
+if (Test-Path $nativeBunPath) {
+    Write-Host "`nFound bun installed via native installer at ~/.bun/bin" -ForegroundColor Yellow
+    Write-Host "  Scoop bun is now preferred. The native bun.exe can be removed." -ForegroundColor Gray
+    Write-Host "  (Global packages in ~/.bun will be preserved)" -ForegroundColor Gray
+    $response = Read-Host "  Remove native bun.exe? (Y/n)"
+    if ($null -eq $response -or $response -eq "" -or $response -match "^[Yy]") {
+        Remove-Item -Force $nativeBunPath -ErrorAction SilentlyContinue
+        Write-Host "  Removed native bun.exe" -ForegroundColor Green
+    } else {
+        Write-Host "  Keeping native bun (may cause PATH conflicts)" -ForegroundColor Yellow
+    }
 }
 
-# Check if bun is installed or configured via mise (can cause conflicts)
+# Check if bun is installed or configured via mise (conflicts with scoop bun)
 $miseBunInstalled = mise list bun 2>$null | Where-Object { $_ -notmatch "\(missing\)" }
 $miseBunConfigured = mise list bun 2>$null | Where-Object { $_ -match "\(missing\)" }
 if ($miseBunInstalled -or $miseBunConfigured) {
@@ -117,8 +127,7 @@ if ($miseBunInstalled -or $miseBunConfigured) {
     } else {
         Write-Host "`nFound bun configured in mise (not yet installed)." -ForegroundColor Yellow
     }
-    Write-Host "  The official bun install is preferred because global packages" -ForegroundColor Gray
-    Write-Host "  (claude, codex, gemini) need bun in PATH before mise activates." -ForegroundColor Gray
+    Write-Host "  Scoop bun is preferred to avoid version conflicts." -ForegroundColor Gray
     $response = Read-Host "  Remove bun from mise? (Y/n)"
     if ($null -eq $response -or $response -eq "" -or $response -match "^[Yy]") {
         if ($miseBunInstalled) {
@@ -175,12 +184,6 @@ foreach ($pkg in $config.bun_global) {
 Write-Host "`nConfiguring PowerShell profile..." -ForegroundColor Yellow
 
 $profileContent = @'
-# Add bun global bin to PATH
-$bunBin = "$env:USERPROFILE\.bun\bin"
-if ((Test-Path $bunBin) -and ($env:PATH -notlike "*$bunBin*")) {
-    $env:PATH = "$bunBin;$env:PATH"
-}
-
 # Initialize mise
 Invoke-Expression (& mise activate pwsh)
 
@@ -199,29 +202,11 @@ if (-not (Test-Path $pwshProfileDir)) {
 if (-not (Test-Path $pwshProfile)) {
     $profileContent | Out-File -FilePath $pwshProfile -Encoding UTF8
     Write-Host "  Created PowerShell Core profile" -ForegroundColor Gray
+} elseif (-not (Select-String -Path $pwshProfile -Pattern "starship init" -Quiet)) {
+    Add-Content -Path $pwshProfile -Value "`n$profileContent"
+    Write-Host "  Updated PowerShell Core profile" -ForegroundColor Gray
 } else {
-    $needsUpdate = $false
-    if (-not (Select-String -Path $pwshProfile -Pattern "starship init" -Quiet)) {
-        Add-Content -Path $pwshProfile -Value "`n$profileContent"
-        Write-Host "  Updated PowerShell Core profile (added mise + starship)" -ForegroundColor Gray
-        $needsUpdate = $true
-    }
-    if (-not (Select-String -Path $pwshProfile -Pattern "\.bun\\bin" -Quiet)) {
-        $bunPathSnippet = @'
-
-# Add bun global bin to PATH
-$bunBin = "$env:USERPROFILE\.bun\bin"
-if ((Test-Path $bunBin) -and ($env:PATH -notlike "*$bunBin*")) {
-    $env:PATH = "$bunBin;$env:PATH"
-}
-'@
-        Add-Content -Path $pwshProfile -Value $bunPathSnippet
-        Write-Host "  Updated PowerShell Core profile (added bun PATH)" -ForegroundColor Gray
-        $needsUpdate = $true
-    }
-    if (-not $needsUpdate) {
-        Write-Host "  PowerShell Core profile already configured" -ForegroundColor Gray
-    }
+    Write-Host "  PowerShell Core profile already configured" -ForegroundColor Gray
 }
 
 # Configure for Windows PowerShell
@@ -235,29 +220,11 @@ if (-not (Test-Path $winPsProfileDir)) {
 if (-not (Test-Path $winPsProfile)) {
     $profileContent | Out-File -FilePath $winPsProfile -Encoding UTF8
     Write-Host "  Created Windows PowerShell profile" -ForegroundColor Gray
+} elseif (-not (Select-String -Path $winPsProfile -Pattern "starship init" -Quiet)) {
+    Add-Content -Path $winPsProfile -Value "`n$profileContent"
+    Write-Host "  Updated Windows PowerShell profile" -ForegroundColor Gray
 } else {
-    $needsUpdate = $false
-    if (-not (Select-String -Path $winPsProfile -Pattern "starship init" -Quiet)) {
-        Add-Content -Path $winPsProfile -Value "`n$profileContent"
-        Write-Host "  Updated Windows PowerShell profile (added mise + starship)" -ForegroundColor Gray
-        $needsUpdate = $true
-    }
-    if (-not (Select-String -Path $winPsProfile -Pattern "\.bun\\bin" -Quiet)) {
-        $bunPathSnippet = @'
-
-# Add bun global bin to PATH
-$bunBin = "$env:USERPROFILE\.bun\bin"
-if ((Test-Path $bunBin) -and ($env:PATH -notlike "*$bunBin*")) {
-    $env:PATH = "$bunBin;$env:PATH"
-}
-'@
-        Add-Content -Path $winPsProfile -Value $bunPathSnippet
-        Write-Host "  Updated Windows PowerShell profile (added bun PATH)" -ForegroundColor Gray
-        $needsUpdate = $true
-    }
-    if (-not $needsUpdate) {
-        Write-Host "  Windows PowerShell profile already configured" -ForegroundColor Gray
-    }
+    Write-Host "  Windows PowerShell profile already configured" -ForegroundColor Gray
 }
 
 # Show what was installed
@@ -273,9 +240,6 @@ Write-Host "`nMise tools:" -ForegroundColor Yellow
 mise list 2>$null | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
 
 Write-Host "`nBun global packages:" -ForegroundColor Yellow
-$bunBinDir = "$env:USERPROFILE\.bun\bin"
-if (Test-Path $bunBinDir) {
-    Get-ChildItem $bunBinDir -File | Select-Object -ExpandProperty BaseName | Sort-Object -Unique | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
-}
+bun pm ls -g 2>$null | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
 
 Write-Host "`nSetup complete!" -ForegroundColor Green
