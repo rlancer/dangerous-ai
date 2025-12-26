@@ -5,13 +5,19 @@
 # Helper function to run commands and display output without stderr causing error formatting
 function Invoke-CommandWithOutput {
     param([scriptblock]$Command)
-    & $Command 2>&1 | ForEach-Object {
-        if ($_ -is [System.Management.Automation.ErrorRecord]) {
-            $_.Exception.Message
-        } else {
-            $_
+    $prevErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    try {
+        & $Command 2>&1 | ForEach-Object {
+            if ($_ -is [System.Management.Automation.ErrorRecord]) {
+                Write-Host $_.Exception.Message
+            } else {
+                Write-Host $_
+            }
         }
-    } | Write-Host
+    } finally {
+        $ErrorActionPreference = $prevErrorActionPreference
+    }
 }
 
 # Load configuration - support both local file and remote URL execution
