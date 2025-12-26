@@ -108,16 +108,29 @@ if ($env:PATH -notlike "*$bunBinPath*") {
     $env:PATH = "$bunBinPath;$env:PATH"
 }
 
-# Check if bun is also installed via mise (can cause conflicts)
-$miseBun = mise list bun 2>$null | Where-Object { $_ -notmatch "\(missing\)" }
-if ($miseBun) {
-    Write-Host "`nFound bun also installed via mise." -ForegroundColor Yellow
+# Check if bun is installed or configured via mise (can cause conflicts)
+$miseBunInstalled = mise list bun 2>$null | Where-Object { $_ -notmatch "\(missing\)" }
+$miseBunConfigured = mise list bun 2>$null | Where-Object { $_ -match "\(missing\)" }
+if ($miseBunInstalled -or $miseBunConfigured) {
+    if ($miseBunInstalled) {
+        Write-Host "`nFound bun installed via mise." -ForegroundColor Yellow
+    } else {
+        Write-Host "`nFound bun configured in mise (not yet installed)." -ForegroundColor Yellow
+    }
     Write-Host "  The official bun install is preferred because global packages" -ForegroundColor Gray
     Write-Host "  (claude, codex, gemini) need bun in PATH before mise activates." -ForegroundColor Gray
-    $response = Read-Host "  Uninstall mise's bun? (Y/n)"
+    $response = Read-Host "  Remove bun from mise? (Y/n)"
     if ($null -eq $response -or $response -eq "" -or $response -match "^[Yy]") {
-        mise uninstall bun 2>&1 | Write-Host
-        Write-Host "  Removed mise bun" -ForegroundColor Green
+        if ($miseBunInstalled) {
+            mise uninstall bun 2>&1 | Out-Null
+        }
+        # Remove bun from mise global config
+        $miseConfigPath = "$env:USERPROFILE\.config\mise\config.toml"
+        if (Test-Path $miseConfigPath) {
+            $content = Get-Content $miseConfigPath | Where-Object { $_ -notmatch '^\s*bun\s*=' }
+            $content | Set-Content $miseConfigPath
+        }
+        Write-Host "  Removed bun from mise" -ForegroundColor Green
     } else {
         Write-Host "  Keeping mise bun (may cause conflicts)" -ForegroundColor Yellow
     }
