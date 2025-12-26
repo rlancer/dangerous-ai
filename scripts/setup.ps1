@@ -76,11 +76,11 @@ $packages += $config.packages.fonts.scoop
 # Install packages
 Write-Host "`nInstalling packages..." -ForegroundColor Yellow
 
-# Get list of installed packages once
-$installedPackages = scoop list 2>$null | Out-String
+# Get list of installed packages once (as array of names)
+$installedApps = (scoop list 2>$null | Where-Object { $_.Name }).Name
 
 foreach ($package in $packages) {
-    if ($installedPackages -match "(?m)^\s*$package\s") {
+    if ($installedApps -contains $package) {
         Write-Host "  $package already installed" -ForegroundColor Gray
     } else {
         Write-Host "  Installing $package..." -ForegroundColor Gray
@@ -88,7 +88,7 @@ foreach ($package in $packages) {
     }
 }
 
-# Refresh PATH to include newly installed tools (mise, etc.)
+# Refresh PATH to include newly installed tools (bun, mise, etc.)
 $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 # Check if bun is installed via mise (scoop version is preferred for PATH compatibility)
@@ -98,7 +98,7 @@ if ($miseBun -match "bun") {
     Write-Host "  Scoop's bun is preferred because global packages (claude, codex, gemini)" -ForegroundColor Gray
     Write-Host "  need bun in PATH before mise activates." -ForegroundColor Gray
     $response = Read-Host "  Uninstall mise's bun? (Y/n)"
-    if ($response -eq "" -or $response -match "^[Yy]") {
+    if ($null -eq $response -or $response -eq "" -or $response -match "^[Yy]") {
         mise uninstall bun 2>&1 | Write-Host
         Write-Host "  Removed mise bun" -ForegroundColor Green
     } else {
@@ -242,7 +242,7 @@ mise list 2>$null | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
 Write-Host "`nBun global packages:" -ForegroundColor Yellow
 $bunBinDir = "$env:USERPROFILE\.bun\bin"
 if (Test-Path $bunBinDir) {
-    Get-ChildItem $bunBinDir -File | ForEach-Object { Write-Host "  $($_.BaseName)" -ForegroundColor Gray }
+    Get-ChildItem $bunBinDir -File | Select-Object -ExpandProperty BaseName | Sort-Object -Unique | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
 }
 
 Write-Host "`nSetup complete!" -ForegroundColor Green
