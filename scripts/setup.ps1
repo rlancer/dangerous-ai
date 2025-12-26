@@ -125,6 +125,12 @@ foreach ($pkg in $config.bun_global) {
 Write-Host "`nConfiguring PowerShell profile..." -ForegroundColor Yellow
 
 $profileContent = @'
+# Add bun global bin to PATH
+$bunBin = "$env:USERPROFILE\.bun\bin"
+if ((Test-Path $bunBin) -and ($env:PATH -notlike "*$bunBin*")) {
+    $env:PATH = "$bunBin;$env:PATH"
+}
+
 # Initialize mise
 Invoke-Expression (& mise activate pwsh)
 
@@ -143,11 +149,29 @@ if (-not (Test-Path $pwshProfileDir)) {
 if (-not (Test-Path $pwshProfile)) {
     $profileContent | Out-File -FilePath $pwshProfile -Encoding UTF8
     Write-Host "  Created PowerShell Core profile" -ForegroundColor Gray
-} elseif (-not (Select-String -Path $pwshProfile -Pattern "starship init" -Quiet)) {
-    Add-Content -Path $pwshProfile -Value "`n$profileContent"
-    Write-Host "  Updated PowerShell Core profile" -ForegroundColor Gray
 } else {
-    Write-Host "  PowerShell Core profile already configured" -ForegroundColor Gray
+    $needsUpdate = $false
+    if (-not (Select-String -Path $pwshProfile -Pattern "starship init" -Quiet)) {
+        Add-Content -Path $pwshProfile -Value "`n$profileContent"
+        Write-Host "  Updated PowerShell Core profile (added mise + starship)" -ForegroundColor Gray
+        $needsUpdate = $true
+    }
+    if (-not (Select-String -Path $pwshProfile -Pattern "\.bun\\bin" -Quiet)) {
+        $bunPathSnippet = @'
+
+# Add bun global bin to PATH
+$bunBin = "$env:USERPROFILE\.bun\bin"
+if ((Test-Path $bunBin) -and ($env:PATH -notlike "*$bunBin*")) {
+    $env:PATH = "$bunBin;$env:PATH"
+}
+'@
+        Add-Content -Path $pwshProfile -Value $bunPathSnippet
+        Write-Host "  Updated PowerShell Core profile (added bun PATH)" -ForegroundColor Gray
+        $needsUpdate = $true
+    }
+    if (-not $needsUpdate) {
+        Write-Host "  PowerShell Core profile already configured" -ForegroundColor Gray
+    }
 }
 
 # Configure for Windows PowerShell
@@ -161,32 +185,47 @@ if (-not (Test-Path $winPsProfileDir)) {
 if (-not (Test-Path $winPsProfile)) {
     $profileContent | Out-File -FilePath $winPsProfile -Encoding UTF8
     Write-Host "  Created Windows PowerShell profile" -ForegroundColor Gray
-} elseif (-not (Select-String -Path $winPsProfile -Pattern "starship init" -Quiet)) {
-    Add-Content -Path $winPsProfile -Value "`n$profileContent"
-    Write-Host "  Updated Windows PowerShell profile" -ForegroundColor Gray
 } else {
-    Write-Host "  Windows PowerShell profile already configured" -ForegroundColor Gray
+    $needsUpdate = $false
+    if (-not (Select-String -Path $winPsProfile -Pattern "starship init" -Quiet)) {
+        Add-Content -Path $winPsProfile -Value "`n$profileContent"
+        Write-Host "  Updated Windows PowerShell profile (added mise + starship)" -ForegroundColor Gray
+        $needsUpdate = $true
+    }
+    if (-not (Select-String -Path $winPsProfile -Pattern "\.bun\\bin" -Quiet)) {
+        $bunPathSnippet = @'
+
+# Add bun global bin to PATH
+$bunBin = "$env:USERPROFILE\.bun\bin"
+if ((Test-Path $bunBin) -and ($env:PATH -notlike "*$bunBin*")) {
+    $env:PATH = "$bunBin;$env:PATH"
+}
+'@
+        Add-Content -Path $winPsProfile -Value $bunPathSnippet
+        Write-Host "  Updated Windows PowerShell profile (added bun PATH)" -ForegroundColor Gray
+        $needsUpdate = $true
+    }
+    if (-not $needsUpdate) {
+        Write-Host "  Windows PowerShell profile already configured" -ForegroundColor Gray
+    }
 }
 
 # Show what was installed
 Write-Host "`n=== Installation Summary ===" -ForegroundColor Cyan
 
 Write-Host "`nScoop packages:" -ForegroundColor Yellow
-scoop list 2>$null | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+$scoopApps = scoop list 2>$null | Where-Object { $_.Name }
+foreach ($app in $scoopApps) {
+    Write-Host "  $($app.Name) $($app.Version)" -ForegroundColor Gray
+}
 
 Write-Host "`nMise tools:" -ForegroundColor Yellow
 mise list 2>$null | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
 
 Write-Host "`nBun global packages:" -ForegroundColor Yellow
-$bunGlobals = bun pm ls -g 2>$null
-if ($bunGlobals) {
-    $bunGlobals | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
-} else {
-    # Alternative: check the global bin directory
-    $bunBinDir = "$env:USERPROFILE\.bun\bin"
-    if (Test-Path $bunBinDir) {
-        Get-ChildItem $bunBinDir -File | ForEach-Object { Write-Host "  $($_.Name)" -ForegroundColor Gray }
-    }
+$bunBinDir = "$env:USERPROFILE\.bun\bin"
+if (Test-Path $bunBinDir) {
+    Get-ChildItem $bunBinDir -File | ForEach-Object { Write-Host "  $($_.BaseName)" -ForegroundColor Gray }
 }
 
 Write-Host "`nSetup complete!" -ForegroundColor Green
