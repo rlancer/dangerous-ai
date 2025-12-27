@@ -78,6 +78,20 @@ const config = loadConfig();
 async function installMiseTools() {
   console.log(yellow("\nInstalling mise tools..."));
 
+  // Trust the global mise config if it exists
+  const miseConfigDir = isWindows
+    ? join(home, ".config", "mise")
+    : join(home, ".config", "mise");
+  const miseGlobalConfig = join(miseConfigDir, "config.toml");
+
+  if (existsSync(miseGlobalConfig)) {
+    try {
+      await $`mise trust ${miseGlobalConfig}`.quiet();
+    } catch {
+      // Trust might fail if config doesn't need trusting, that's ok
+    }
+  }
+
   for (const tool of config.mise_tools) {
     const toolName = tool.replace(/@.*/, "");
     try {
@@ -89,7 +103,18 @@ async function installMiseTools() {
       }
     } catch {
       console.log(gray(`  Installing ${tool}...`));
-      await $`mise use -g ${tool}`;
+      try {
+        // Use mise install instead of mise use for initial installation
+        // mise use -g can fail on Windows with exit code 53 due to config file issues
+        await $`mise install ${tool}`.quiet();
+        await $`mise use -g ${tool}`.quiet();
+        console.log(green(`  ${toolName} installed successfully`));
+      } catch (err: unknown) {
+        const error = err as { exitCode?: number; stderr?: string };
+        console.log(yellow(`  Warning: Failed to install ${tool} via mise (exit code: ${error.exitCode || 'unknown'})`));
+        console.log(gray(`  You can manually install later with: mise use -g ${tool}`));
+        // Continue with other tools instead of failing completely
+      }
     }
   }
 }

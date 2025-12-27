@@ -1,0 +1,42 @@
+name: Test macOS Setup
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/setup-mcp.sh'
+      - '.github/workflows/test-mac-setup.yml'
+  workflow_dispatch:
+
+jobs:
+  test-mac-setup:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install jq
+
+      - name: Run MCP Setup Script
+        run: |
+          chmod +x scripts/setup-mcp.sh
+          ./scripts/setup-mcp.sh
+
+      - name: Verify Config Created
+        run: |
+          CONFIG_FILE="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "Error: Config file was not created!"
+            exit 1
+          fi
+          
+          echo "Content of config file:"
+          cat "$CONFIG_FILE"
+          
+          # Check if playwright is in the config
+          if grep -q "playwright" "$CONFIG_FILE"; then
+            echo "Success: Playwright config found."
+          else
+            echo "Error: Playwright config missing."
+            exit 1
+          fi
