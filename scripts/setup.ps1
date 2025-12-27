@@ -156,101 +156,37 @@ if ($miseBunInstalled -or $miseBunConfigured) {
     }
 }
 
-# Install mise tools from config
-$miseTools = @($config.mise_tools | Where-Object { $_ })
-if ($miseTools.Count -gt 0) {
-    Write-Host "`nInstalling mise tools..." -ForegroundColor Yellow
-    foreach ($tool in $miseTools) {
-        $toolName = $tool -replace "@.*", ""
-        # Check if actually installed (not just in config as "missing")
-        $installed = mise list $toolName 2>$null | Where-Object { $_ -notmatch "\(missing\)" }
-        if ($installed) {
-            Write-Host "  $toolName already installed via mise" -ForegroundColor Gray
-        } else {
-            Write-Host "  Installing $tool..." -ForegroundColor Gray
-            Invoke-CommandWithOutput "mise use -g $tool"
-        }
-    }
-}
-
-# Add mise shims to PATH for current session
-$miseDataDir = if ($env:MISE_DATA_DIR) { $env:MISE_DATA_DIR } else { "$env:LOCALAPPDATA\mise" }
-$env:PATH = "$miseDataDir\shims;$env:PATH"
-
-# Install bun global packages from config
-Write-Host "`nInstalling bun global packages..." -ForegroundColor Yellow
-
-foreach ($pkg in $config.bun_global) {
-    # Extract command name from package (last part after /)
-    $cmdName = ($pkg -split "/")[-1]
-    if (Get-Command $cmdName -ErrorAction SilentlyContinue) {
-        Write-Host "  $pkg already installed" -ForegroundColor Gray
-    } else {
-        Write-Host "  Installing $pkg..." -ForegroundColor Gray
-        Invoke-CommandWithOutput "bun install -g $pkg"
-    }
-}
-
-# Configure PowerShell profile for mise and starship
-Write-Host "`nConfiguring PowerShell profile..." -ForegroundColor Yellow
-
-$profileContent = @'
-# Initialize mise
-Invoke-Expression (& mise activate pwsh)
-
-# Initialize starship prompt
-Invoke-Expression (&starship init powershell)
-'@
-
-# Configure for PowerShell Core (pwsh)
-$pwshProfileDir = "$env:USERPROFILE\Documents\PowerShell"
-$pwshProfile = "$pwshProfileDir\Microsoft.PowerShell_profile.ps1"
-
-if (-not (Test-Path $pwshProfileDir)) {
-    New-Item -ItemType Directory -Path $pwshProfileDir -Force | Out-Null
-}
-
-if (-not (Test-Path $pwshProfile)) {
-    $profileContent | Out-File -FilePath $pwshProfile -Encoding UTF8
-    Write-Host "  Created PowerShell Core profile" -ForegroundColor Gray
-} elseif (-not (Select-String -Path $pwshProfile -Pattern "starship init" -Quiet)) {
-    Add-Content -Path $pwshProfile -Value "`n$profileContent"
-    Write-Host "  Updated PowerShell Core profile" -ForegroundColor Gray
-} else {
-    Write-Host "  PowerShell Core profile already configured" -ForegroundColor Gray
-}
-
-# Configure for Windows PowerShell
-$winPsProfileDir = "$env:USERPROFILE\Documents\WindowsPowerShell"
-$winPsProfile = "$winPsProfileDir\Microsoft.PowerShell_profile.ps1"
-
-if (-not (Test-Path $winPsProfileDir)) {
-    New-Item -ItemType Directory -Path $winPsProfileDir -Force | Out-Null
-}
-
-if (-not (Test-Path $winPsProfile)) {
-    $profileContent | Out-File -FilePath $winPsProfile -Encoding UTF8
-    Write-Host "  Created Windows PowerShell profile" -ForegroundColor Gray
-} elseif (-not (Select-String -Path $winPsProfile -Pattern "starship init" -Quiet)) {
-    Add-Content -Path $winPsProfile -Value "`n$profileContent"
-    Write-Host "  Updated Windows PowerShell profile" -ForegroundColor Gray
-} else {
-    Write-Host "  Windows PowerShell profile already configured" -ForegroundColor Gray
-}
-
-# Show what was installed
-Write-Host "`n=== Installation Summary ===" -ForegroundColor Cyan
-
+# Show scoop packages summary
+Write-Host "`n=== Bootstrap Summary ===" -ForegroundColor Cyan
 Write-Host "`nScoop packages:" -ForegroundColor Yellow
 $scoopApps = scoop list 2>$null | Where-Object { $_.Name }
 foreach ($app in $scoopApps) {
     Write-Host "  $($app.Name) $($app.Version)" -ForegroundColor Gray
 }
 
-Write-Host "`nMise tools:" -ForegroundColor Yellow
-mise list 2>$null | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+# Hand off to TypeScript for the rest of setup
+Write-Host "`n=== Continuing with bun... ===" -ForegroundColor Cyan
 
-Write-Host "`nBun global packages:" -ForegroundColor Yellow
-bun pm ls -g 2>$null | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+# Determine script location for local vs remote execution
+if ($PSScriptRoot) {
+    $setupTsPath = Join-Path $PSScriptRoot "setup.ts"
+} else {
+    # Running via irm | iex - download setup.ts to temp and run it
+    $tempDir = Join-Path $env:TEMP "ai-setup"
+    if (-not (Test-Path $tempDir)) {
+        New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+    }
 
-Write-Host "`nSetup complete!" -ForegroundColor Green
+    # Download setup.ts and config.json
+    $setupTsPath = Join-Path $tempDir "setup.ts"
+    $configDir = Join-Path $tempDir "config"
+    if (-not (Test-Path $configDir)) {
+        New-Item -ItemType Directory -Path $configDir -Force | Out-Null
+    }
+
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/rlancer/dangerous-ai/main/scripts/setup.ts" -OutFile $setupTsPath
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/rlancer/dangerous-ai/main/config/config.json" -OutFile (Join-Path $configDir "config.json")
+}
+
+# Run the TypeScript setup script
+bun run $setupTsPath

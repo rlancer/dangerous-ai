@@ -8,9 +8,12 @@ This repository provides cross-platform setup scripts to install a development e
 
 ## Architecture
 
-- **config/config.json**: Central configuration file defining all packages for both platforms. Scripts read this file to determine what to install.
-- **scripts/setup.ps1**: Windows setup script (PowerShell). Can run locally or via `irm URL | iex` - fetches config from GitHub when run remotely.
-- **scripts/setup.sh**: macOS setup script (Bash). Requires jq for JSON parsing.
+Hybrid shell + TypeScript approach: shell scripts bootstrap the package manager and bun, then hand off to a cross-platform TypeScript script.
+
+- **config/config.json**: Central configuration file defining all packages for both platforms.
+- **scripts/setup.ps1**: Windows bootstrap (PowerShell). Installs Scoop, git, packages, bun, then calls setup.ts. Supports `irm URL | iex` remote execution.
+- **scripts/setup.sh**: macOS bootstrap (Bash). Installs Homebrew, packages, bun, then calls setup.ts. Requires jq for JSON parsing.
+- **scripts/setup.ts**: Cross-platform TypeScript (runs via bun). Handles mise tools, bun globals, shell profiles, and SSH key setup.
 - **tests/test-setup.ps1**: Test runner using Windows Sandbox to validate setup.ps1 in isolation.
 
 ## Commands

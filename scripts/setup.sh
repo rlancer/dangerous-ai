@@ -1,5 +1,6 @@
 #!/bin/bash
 # Setup script for new user environment (macOS)
+# Bootstrap: installs Homebrew and packages, then hands off to TypeScript
 
 set -e
 
@@ -13,7 +14,7 @@ if [ ! -f "$CONFIG_PATH" ]; then
     exit 1
 fi
 
-# Check for jq (needed to parse JSON)
+# Check for jq (needed to parse JSON in bootstrap phase)
 if ! command -v jq &> /dev/null; then
     echo "Installing jq for JSON parsing..."
     if command -v brew &> /dev/null; then
@@ -64,7 +65,7 @@ for pkg in $(jq -r '.packages.common.brew[]' "$CONFIG_PATH"); do
     fi
 done
 
-# Install macOS-specific packages
+# Install macOS-specific packages (includes bun)
 echo ""
 echo "Installing macOS packages..."
 for pkg in $(jq -r '.packages.macos.brew // [] | .[]' "$CONFIG_PATH"); do
@@ -88,59 +89,22 @@ for font in $(jq -r '.packages.fonts.brew_cask[]' "$CONFIG_PATH"); do
     fi
 done
 
-# Install mise tools from config
+# Show bootstrap summary
 echo ""
-echo "Installing mise tools..."
-eval "$(mise activate bash)"
-
-for tool in $(jq -r '.mise_tools[]' "$CONFIG_PATH"); do
-    tool_name="${tool%%@*}"
-    if mise list "$tool_name" 2>/dev/null | grep -q "$tool_name"; then
-        echo "  $tool_name already installed via mise"
-    else
-        echo "  Installing $tool..."
-        mise use -g "$tool"
-    fi
-done
-
-# Install bun global packages from config
+echo "=== Bootstrap Summary ==="
 echo ""
-echo "Installing bun global packages..."
+echo "Homebrew packages:"
+brew list --formula | sed 's/^/  /'
 
-for pkg in $(jq -r '.bun_global[]' "$CONFIG_PATH"); do
-    # Extract command name from package (last part after /)
-    cmd_name="${pkg##*/}"
-    if command -v "$cmd_name" &> /dev/null; then
-        echo "  $pkg already installed"
-    else
-        echo "  Installing $pkg..."
-        bun install -g "$pkg"
-    fi
-done
-
-# Configure shell profile for mise and starship
+# Hand off to TypeScript for the rest of setup
 echo ""
-echo "Configuring shell profile..."
+echo "=== Continuing with bun... ==="
 
-PROFILE_CONTENT='
-# Initialize mise
-eval "$(mise activate zsh)"
+SETUP_TS_PATH="$SCRIPT_DIR/setup.ts"
 
-# Initialize starship prompt
-eval "$(starship init zsh)"
-'
-
-ZSHRC="$HOME/.zshrc"
-
-if [ ! -f "$ZSHRC" ]; then
-    echo "$PROFILE_CONTENT" > "$ZSHRC"
-    echo "  Created .zshrc"
-elif ! grep -q "starship init" "$ZSHRC"; then
-    echo "$PROFILE_CONTENT" >> "$ZSHRC"
-    echo "  Updated .zshrc"
+if [ -f "$SETUP_TS_PATH" ]; then
+    bun run "$SETUP_TS_PATH"
 else
-    echo "  .zshrc already configured"
+    echo "ERROR: setup.ts not found at $SETUP_TS_PATH"
+    exit 1
 fi
-
-echo ""
-echo "Setup complete!"
