@@ -105,6 +105,12 @@ curl -fsSL https://raw.githubusercontent.com/rlancer/dangerous-ai/main/scripts/s
 
 | Package | Description |
 |---------|-------------|
+| uv | Fast Python package manager |
+
+### Via Scoop (Windows) / Homebrew (macOS)
+
+| Package | Description |
+|---------|-------------|
 | bun | Fast JavaScript runtime |
 
 ### AI CLI Tools (via Bun, Both Platforms)
