@@ -17,7 +17,7 @@
   },
   "buckets": {
     "scoop": ["extras", "nerd-fonts"],
-    "brew": []
+    "brew": ["oven-sh/bun"]
   },
   "mise_tools": ["uv"],
   "bun_global": [
