@@ -2,6 +2,8 @@
 
 Setup scripts to install a development environment with AI coding assistants on Windows and macOS.
 
+![Demo](docs/demo.gif)
+
 ## Project Structure
 
 ```
