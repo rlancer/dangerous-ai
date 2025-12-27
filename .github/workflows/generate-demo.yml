@@ -10,14 +10,20 @@ on:
 
 jobs:
   generate:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install VHS and dependencies
+        run: |
+          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+          irm get.scoop.sh | iex
+          scoop install ffmpeg vhs
+        shell: powershell
+
       - name: Generate GIF
-        uses: charmbracelet/vhs-action@v2
-        with:
-          path: docs/demo.tape
+        run: vhs docs/demo.tape
+        shell: powershell
 
       - name: Upload GIF as artifact
         uses: actions/upload-artifact@v4
