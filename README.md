@@ -1,4 +1,4 @@
-# AI for the Rest - Environment Setup
+# Learn Enough Coding to Be Dangerous with AI
 
 Setup scripts to install a development environment with AI coding assistants on Windows and macOS.
 

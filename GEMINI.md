@@ -1,7 +1,7 @@
-# AI for the Rest - Gemini Context
+# Learn Enough Coding to Be Dangerous with AI - Gemini Context
 
 ## Project Overview
-"AI for the Rest" is a cross-platform infrastructure project designed to automate the setup of a modern development environment integrated with AI coding assistants. It supports Windows (via PowerShell/Scoop) and macOS (via Bash/Homebrew).
+"Learn Enough Coding to Be Dangerous with AI" is a cross-platform infrastructure project designed to automate the setup of a modern development environment integrated with AI coding assistants. It supports Windows (via PowerShell/Scoop) and macOS (via Bash/Homebrew).
 
 The project installs:
 *   **AI CLIs:** `@anthropic-ai/claude-code`, `@openai/codex`, `@google/gemini-cli` (via Bun).
