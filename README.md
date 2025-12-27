@@ -1,6 +1,40 @@
-# Learn Enough Coding to Be Dangerous with AI
+# Dangerous AI
 
-Setup scripts to install a development environment with AI coding assistants on Windows and macOS.
+One-command setup to supercharge your work with AI coding tools - no programming experience required.
+
+## Who Is This For?
+
+You're not a software developer, but you have real problems to solve at work. You need to analyze messy data, automate repetitive tasks, or build tools that don't exist yet. This project sets you up with AI assistants that can do the technical heavy lifting while you focus on the problem.
+
+## What Can You Actually Do?
+
+With AI coding tools, non-programmers can tackle tasks that used to require hiring a developer:
+
+- **Data Analysis** - Query large datasets, find patterns, generate reports
+- **Data Cleaning** - Transform messy CSVs, deduplicate records, standardize formats
+- **Browser Automation** - Scrape websites, fill forms, automate repetitive web tasks
+- **File Processing** - Batch rename, convert formats, extract information from PDFs
+- **Custom Tools** - Build small apps tailored to your specific workflow
+- **API Integrations** - Connect services together, pull data from various sources
+
+## Why "Dangerous"?
+
+Because you become capable of solving problems that previously required a professional developer. You won't write code yourself - the AI does that - but you'll direct it to build exactly what you need.
+
+## Why CLI Tools Over Chat Interfaces?
+
+AI coding assistants like Claude Code, Codex, and Gemini CLI run directly in your terminal. They're fundamentally different from chatting with AI in a browser:
+
+| CLI Tools | Chat Interfaces |
+|-----------|-----------------|
+| Read and write files directly on your machine | Copy-paste code back and forth |
+| Execute commands and see real output | Guess at what might work |
+| Understand your entire project context | Limited to what you paste in |
+| Process your actual data files | Work with toy examples |
+| Run scripts and fix errors automatically | Manual iteration loop |
+| Works with your local files | Everything lives in the browser |
+
+The CLI tools turn AI from a "coding assistant you talk to" into a "coding partner that works alongside you" - it can see your files, run code, and iterate until the job is done.
 
 ## Quick Install
 

@@ -1,7 +1,11 @@
-# Learn Enough Coding to Be Dangerous with AI - Gemini Context
+# Dangerous AI - Gemini Context
 
 ## Project Overview
-"Learn Enough Coding to Be Dangerous with AI" is a cross-platform infrastructure project designed to automate the setup of a modern development environment integrated with AI coding assistants. It supports Windows (via PowerShell/Scoop) and macOS (via Bash/Homebrew).
+"Dangerous AI" is a cross-platform setup project for non-programmers who want to use AI coding tools to enhance their work. It automates installation of a complete environment on Windows (via PowerShell/Scoop) and macOS (via Bash/Homebrew).
+
+**Target audience:** Business professionals, analysts, and anyone who isn't a software developer but needs to solve technical problems - data analysis, data cleaning, browser automation, file processing, building custom tools, and API integrations.
+
+The name reflects the idea that with AI tools, anyone motivated can become "dangerous" - capable of solving problems that previously required hiring a developer.
 
 The project installs:
 *   **AI CLIs:** `@anthropic-ai/claude-code`, `@openai/codex`, `@google/gemini-cli` (via Bun).
