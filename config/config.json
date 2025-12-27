@@ -17,7 +17,7 @@
   },
   "buckets": {
     "scoop": ["extras", "nerd-fonts"],
-    "brew": ["homebrew/cask-fonts"]
+    "brew": []
   },
   "mise_tools": ["uv"],
   "bun_global": [

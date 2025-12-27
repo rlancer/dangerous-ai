@@ -120,12 +120,17 @@ if (Test-Path $nativeBunPath) {
     Write-Host "`nFound bun installed via native installer at ~/.bun/bin" -ForegroundColor Yellow
     Write-Host "  Scoop bun is now preferred. The native bun.exe can be removed." -ForegroundColor Gray
     Write-Host "  (Global packages in ~/.bun will be preserved)" -ForegroundColor Gray
-    $response = Read-Host "  Remove native bun.exe? (Y/n)"
-    if ($null -eq $response -or $response -eq "" -or $response -match "^[Yy]") {
-        Remove-Item -Force $nativeBunPath -ErrorAction SilentlyContinue
-        Write-Host "  Removed native bun.exe" -ForegroundColor Green
+    # Skip prompts in CI environments
+    if ($env:CI -or $env:GITHUB_ACTIONS) {
+        Write-Host "  Skipping removal (CI environment)" -ForegroundColor Gray
     } else {
-        Write-Host "  Keeping native bun (may cause PATH conflicts)" -ForegroundColor Yellow
+        $response = Read-Host "  Remove native bun.exe? (Y/n)"
+        if ($null -eq $response -or $response -eq "" -or $response -match "^[Yy]") {
+            Remove-Item -Force $nativeBunPath -ErrorAction SilentlyContinue
+            Write-Host "  Removed native bun.exe" -ForegroundColor Green
+        } else {
+            Write-Host "  Keeping native bun (may cause PATH conflicts)" -ForegroundColor Yellow
+        }
     }
 }
 
@@ -139,20 +144,25 @@ if ($miseBunInstalled -or $miseBunConfigured) {
         Write-Host "`nFound bun configured in mise (not yet installed)." -ForegroundColor Yellow
     }
     Write-Host "  Scoop bun is preferred to avoid version conflicts." -ForegroundColor Gray
-    $response = Read-Host "  Remove bun from mise? (Y/n)"
-    if ($null -eq $response -or $response -eq "" -or $response -match "^[Yy]") {
-        if ($miseBunInstalled) {
-            mise uninstall bun 2>&1 | Out-Null
-        }
-        # Remove bun from mise global config
-        $miseConfigPath = "$env:USERPROFILE\.config\mise\config.toml"
-        if (Test-Path $miseConfigPath) {
-            $content = Get-Content $miseConfigPath | Where-Object { $_ -notmatch '^\s*bun\s*=' }
-            $content | Set-Content $miseConfigPath
-        }
-        Write-Host "  Removed bun from mise" -ForegroundColor Green
+    # Skip prompts in CI environments
+    if ($env:CI -or $env:GITHUB_ACTIONS) {
+        Write-Host "  Skipping removal (CI environment)" -ForegroundColor Gray
     } else {
-        Write-Host "  Keeping mise bun (may cause conflicts)" -ForegroundColor Yellow
+        $response = Read-Host "  Remove bun from mise? (Y/n)"
+        if ($null -eq $response -or $response -eq "" -or $response -match "^[Yy]") {
+            if ($miseBunInstalled) {
+                mise uninstall bun 2>&1 | Out-Null
+            }
+            # Remove bun from mise global config
+            $miseConfigPath = "$env:USERPROFILE\.config\mise\config.toml"
+            if (Test-Path $miseConfigPath) {
+                $content = Get-Content $miseConfigPath | Where-Object { $_ -notmatch '^\s*bun\s*=' }
+                $content | Set-Content $miseConfigPath
+            }
+            Write-Host "  Removed bun from mise" -ForegroundColor Green
+        } else {
+            Write-Host "  Keeping mise bun (may cause conflicts)" -ForegroundColor Yellow
+        }
     }
 }
 

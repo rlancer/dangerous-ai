@@ -18,15 +18,22 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Windows Setup Script
-        run: .\scripts\setup.ps1
+        run: |
+          .\scripts\setup.ps1
+          # Add scoop shims to PATH for subsequent steps
+          "$env:USERPROFILE\scoop\shims" | Out-File -FilePath $env:GITHUB_PATH -Append
         shell: powershell
 
       - name: Verify Scoop Installation
-        run: scoop --version
+        run: |
+          $env:PATH = "$env:USERPROFILE\scoop\shims;$env:PATH"
+          scoop --version
         shell: powershell
 
       - name: Verify Mise Installation
-        run: mise --version
+        run: |
+          $env:PATH = "$env:USERPROFILE\scoop\shims;$env:PATH"
+          mise --version
         shell: powershell
 
   test-macos-env:
