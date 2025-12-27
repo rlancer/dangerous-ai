@@ -19,9 +19,9 @@ With AI coding tools, non-programmers can tackle tasks that used to require hiri
 - **Custom Tools** - Build small apps tailored to your specific workflow
 - **API Integrations** - Connect services together, pull data from various sources
 
-## Why "Dangerous"?
+## Why "The Rest of Us"?
 
-Because you become capable of solving problems that previously required a professional developer. You won't write code yourself - the AI does that - but you'll direct it to build exactly what you need.
+This phrase comes from Apple's 1984 Macintosh slogan: "The computer for the rest of us." It meant computers weren't just for programmers anymore. The same shift is happening now with AI coding tools - you don't need to be a developer to build software. You describe what you need, and AI writes the code.
 
 ## Why CLI Tools Over Chat Interfaces?
 
