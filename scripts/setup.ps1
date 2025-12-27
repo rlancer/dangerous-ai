@@ -167,26 +167,31 @@ foreach ($app in $scoopApps) {
 # Hand off to TypeScript for the rest of setup
 Write-Host "`n=== Continuing with bun... ===" -ForegroundColor Cyan
 
-# Determine script location for local vs remote execution
+# Always copy setup.ts and config to temp directory to avoid permission issues
+# (Windows Sandbox and other restricted environments can't run directly from mapped folders)
+$tempDir = Join-Path $env:TEMP "ai-setup"
+if (-not (Test-Path $tempDir)) {
+    New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+}
+
+$setupTsPath = Join-Path $tempDir "setup.ts"
+$configDir = Join-Path $tempDir "config"
+if (-not (Test-Path $configDir)) {
+    New-Item -ItemType Directory -Path $configDir -Force | Out-Null
+}
+
 if ($PSScriptRoot) {
-    $setupTsPath = Join-Path $PSScriptRoot "setup.ts"
+    # Running from a file on disk - copy files to temp
+    $sourceTs = Join-Path $PSScriptRoot "setup.ts"
+    $sourceConfig = Join-Path (Split-Path $PSScriptRoot -Parent) "config\config.json"
+
+    Copy-Item -Path $sourceTs -Destination $setupTsPath -Force
+    Copy-Item -Path $sourceConfig -Destination (Join-Path $configDir "config.json") -Force
 } else {
-    # Running via irm | iex - download setup.ts to temp and run it
-    $tempDir = Join-Path $env:TEMP "ai-setup"
-    if (-not (Test-Path $tempDir)) {
-        New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
-    }
-
-    # Download setup.ts and config.json
-    $setupTsPath = Join-Path $tempDir "setup.ts"
-    $configDir = Join-Path $tempDir "config"
-    if (-not (Test-Path $configDir)) {
-        New-Item -ItemType Directory -Path $configDir -Force | Out-Null
-    }
-
+    # Running via irm | iex - download files to temp
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/rlancer/dangerous-ai/main/scripts/setup.ts" -OutFile $setupTsPath
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/rlancer/dangerous-ai/main/config/config.json" -OutFile (Join-Path $configDir "config.json")
 }
 
-# Run the TypeScript setup script
+# Run the TypeScript setup script from temp
 bun run $setupTsPath
