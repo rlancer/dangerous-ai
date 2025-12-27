@@ -10,24 +10,14 @@ on:
 
 jobs:
   generate:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install VHS and dependencies
-        run: |
-          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-          irm get.scoop.sh | iex
-          scoop install ffmpeg vhs
-          # Add scoop shims to PATH for subsequent steps
-          "$env:USERPROFILE\scoop\shims" | Out-File -FilePath $env:GITHUB_PATH -Append
-        shell: powershell
-
       - name: Generate GIF
-        run: |
-          $env:PATH = "$env:USERPROFILE\scoop\shims;$env:PATH"
-          vhs docs/demo.tape
-        shell: powershell
+        uses: charmbracelet/vhs-action@v2
+        with:
+          path: docs/demo.tape
 
       - name: Upload GIF as artifact
         uses: actions/upload-artifact@v4
