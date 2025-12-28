@@ -84,15 +84,15 @@ curl -fsSL https://raw.githubusercontent.com/rlancer/ai-for-the-rest/main/script
 
 ### Project Scaffolding with aftr
 
-After environment setup, use the `aftr` CLI to create data science projects:
+After environment setup, use the `aftr` CLI to create data science projects with `uvx` (no installation required):
 
 ```bash
 # Interactive mode
-aftr
+uvx aftr
 
 # Create a new project directly
-aftr init my-project
-aftr init my-project --path /custom/path
+uvx aftr init my-project
+uvx aftr init my-project --path /custom/path
 ```
 
 **What aftr creates:**
@@ -169,19 +169,15 @@ my-project/
 
 ### Project Tools
 
-#### aftr CLI (via UV)
+#### aftr CLI (via uvx)
 
-After environment setup, install the `aftr` project scaffolding tool:
-
-```bash
-uv tool install aftr
-```
+The `aftr` project scaffolding tool runs directly with `uvx` - no installation needed:
 
 | Command | Description |
 |---------|-------------|
-| `aftr` | Interactive project creation menu |
-| `aftr init <name>` | Create a new data science project |
-| `aftr init <name> -p <path>` | Create project at custom path |
+| `uvx aftr` | Interactive project creation menu |
+| `uvx aftr init <name>` | Create a new data science project |
+| `uvx aftr init <name> -p <path>` | Create project at custom path |
 
 **Included in scaffolded projects:**
 - pandas & polars for data analysis
