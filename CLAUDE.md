@@ -50,3 +50,46 @@ bash scripts/setup.sh
 - Config changes cascade to both platforms - edit config.json, not the scripts
 - Remote execution supported on Windows via config fetch from GitHub
 - Test artifacts (test-sandbox.wsb, test-wrapper.ps1) are gitignored and generated at runtime
+
+## aftr CLI (packages/cli)
+
+Python CLI tool for scaffolding data science projects. Built with Typer and Rich.
+
+### Usage
+
+```bash
+# Install
+uv tool install aftr
+
+# Create a new project
+aftr my-project
+aftr my-project --path /custom/path
+```
+
+### What it creates
+
+```
+my-project/
+├── data/              # Input data (gitignored)
+├── notebooks/         # Jupyter notebooks with example.ipynb
+├── outputs/           # Output files (gitignored)
+├── src/my_project/    # Python module (hyphens → underscores)
+├── .gitignore
+├── .mise.toml         # Python 3.12, UV latest
+├── pyproject.toml     # pandas, polars, jupyter, papermill
+└── README.md
+```
+
+### Development
+
+```bash
+cd packages/cli
+uv sync
+uv run pytest tests/ -v
+```
+
+### Key files
+
+- **packages/cli/src/aftr/cli.py**: Main entry point, registers init command
+- **packages/cli/src/aftr/commands/init.py**: Project scaffolding logic
+- **packages/cli/tests/test_init.py**: 14 tests covering CLI behavior

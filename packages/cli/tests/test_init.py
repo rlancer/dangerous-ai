@@ -18,11 +18,17 @@ class TestCli:
         """CLI shows help when invoked with --help."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
+        assert "init" in result.stdout
+
+    def test_init_help(self) -> None:
+        """Init command shows help when invoked with --help."""
+        result = runner.invoke(app, ["init", "--help"])
+        assert result.exit_code == 0
         assert "Scaffold a new Python data project" in result.stdout
 
-    def test_missing_name_shows_error(self) -> None:
-        """CLI shows error when NAME is missing."""
-        result = runner.invoke(app, [])
+    def test_init_missing_name_shows_error(self) -> None:
+        """Init shows error when NAME is missing."""
+        result = runner.invoke(app, ["init"])
         # Typer shows usage info when required arg is missing
         assert result.exit_code != 0 or "NAME" in result.stdout
 
@@ -32,13 +38,13 @@ class TestInitCommand:
 
     def test_creates_project_directory(self, tmp_path: Path) -> None:
         """Init creates the project directory."""
-        result = runner.invoke(app, ["my-project", "--path", str(tmp_path)])
+        result = runner.invoke(app, ["init", "my-project", "--path", str(tmp_path)])
         assert result.exit_code == 0
         assert (tmp_path / "my-project").is_dir()
 
     def test_creates_directory_structure(self, tmp_path: Path) -> None:
         """Init creates all expected directories."""
-        runner.invoke(app, ["test-proj", "--path", str(tmp_path)])
+        runner.invoke(app, ["init", "test-proj", "--path", str(tmp_path)])
 
         project = tmp_path / "test-proj"
         assert (project / "notebooks").is_dir()
@@ -48,7 +54,7 @@ class TestInitCommand:
 
     def test_creates_pyproject_toml(self, tmp_path: Path) -> None:
         """Init creates a valid pyproject.toml."""
-        runner.invoke(app, ["data-analysis", "--path", str(tmp_path)])
+        runner.invoke(app, ["init", "data-analysis", "--path", str(tmp_path)])
 
         pyproject = tmp_path / "data-analysis" / "pyproject.toml"
         assert pyproject.exists()
@@ -61,7 +67,7 @@ class TestInitCommand:
 
     def test_creates_mise_toml(self, tmp_path: Path) -> None:
         """Init creates .mise.toml with correct tools."""
-        runner.invoke(app, ["myproj", "--path", str(tmp_path)])
+        runner.invoke(app, ["init", "myproj", "--path", str(tmp_path)])
 
         mise = tmp_path / "myproj" / ".mise.toml"
         assert mise.exists()
@@ -71,7 +77,7 @@ class TestInitCommand:
 
     def test_creates_gitignore(self, tmp_path: Path) -> None:
         """Init creates .gitignore with expected patterns."""
-        runner.invoke(app, ["proj", "--path", str(tmp_path)])
+        runner.invoke(app, ["init", "proj", "--path", str(tmp_path)])
 
         gitignore = tmp_path / "proj" / ".gitignore"
         assert gitignore.exists()
@@ -84,7 +90,7 @@ class TestInitCommand:
 
     def test_creates_init_py(self, tmp_path: Path) -> None:
         """Init creates __init__.py in the src module."""
-        runner.invoke(app, ["my-pkg", "--path", str(tmp_path)])
+        runner.invoke(app, ["init", "my-pkg", "--path", str(tmp_path)])
 
         init_py = tmp_path / "my-pkg" / "src" / "my_pkg" / "__init__.py"
         assert init_py.exists()
@@ -94,7 +100,7 @@ class TestInitCommand:
 
     def test_creates_example_notebook(self, tmp_path: Path) -> None:
         """Init creates a valid Jupyter notebook."""
-        runner.invoke(app, ["nb-project", "--path", str(tmp_path)])
+        runner.invoke(app, ["init", "nb-project", "--path", str(tmp_path)])
 
         notebook = tmp_path / "nb-project" / "notebooks" / "example.ipynb"
         assert notebook.exists()
@@ -113,7 +119,7 @@ class TestInitCommand:
 
     def test_creates_readme(self, tmp_path: Path) -> None:
         """Init creates README.md with project info."""
-        runner.invoke(app, ["readme-test", "--path", str(tmp_path)])
+        runner.invoke(app, ["init", "readme-test", "--path", str(tmp_path)])
 
         readme = tmp_path / "readme-test" / "README.md"
         assert readme.exists()
@@ -124,7 +130,7 @@ class TestInitCommand:
 
     def test_hyphenated_name_converts_to_underscore(self, tmp_path: Path) -> None:
         """Hyphens in project name are converted to underscores for module."""
-        runner.invoke(app, ["my-data-project", "--path", str(tmp_path)])
+        runner.invoke(app, ["init", "my-data-project", "--path", str(tmp_path)])
 
         # Directory uses hyphens
         assert (tmp_path / "my-data-project").is_dir()
@@ -140,7 +146,7 @@ class TestInitErrors:
         existing = tmp_path / "existing-project"
         existing.mkdir()
 
-        result = runner.invoke(app, ["existing-project", "--path", str(tmp_path)])
+        result = runner.invoke(app, ["init", "existing-project", "--path", str(tmp_path)])
         assert result.exit_code == 1
         assert "already exists" in result.stdout
 
@@ -151,7 +157,7 @@ class TestInitErrors:
         existing.mkdir()
         (existing / "some-file.txt").write_text("content")
 
-        result = runner.invoke(app, ["has-content", "--path", str(tmp_path)])
+        result = runner.invoke(app, ["init", "has-content", "--path", str(tmp_path)])
         assert result.exit_code == 1
 
 
@@ -162,7 +168,7 @@ class TestInitWithDefaultPath:
         """Init creates project in current directory when no path specified."""
         monkeypatch.chdir(tmp_path)
 
-        result = runner.invoke(app, ["default-path-proj"])
+        result = runner.invoke(app, ["init", "default-path-proj"])
         assert result.exit_code == 0
         assert (tmp_path / "default-path-proj").is_dir()
         assert (tmp_path / "default-path-proj" / "pyproject.toml").exists()
