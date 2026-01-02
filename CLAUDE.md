@@ -18,7 +18,7 @@ Hybrid shell + TypeScript approach: shell scripts bootstrap the package manager 
 - **config/config.json**: Central configuration file defining all packages for both platforms. AI CLI tools are no longer pre-configured here - users select them interactively via aftr.
 - **scripts/setup.ps1**: Windows bootstrap (PowerShell). Installs Scoop, git, packages, bun, then calls setup.ts. Supports `irm URL | iex` remote execution.
 - **scripts/setup.sh**: macOS bootstrap (Bash). Installs Homebrew, packages, bun, then calls setup.ts. Requires jq for JSON parsing.
-- **scripts/setup.ts**: Cross-platform TypeScript (runs via bun). Handles mise tools, uv tools (including aftr), and shell profiles. Shows instructions for user to run `aftr setup` in a new terminal.
+- **scripts/setup.ts**: Cross-platform TypeScript (runs via bun). Handles mise tools, uv tools (including aftr), and shell profiles (including adding ~/.local/bin to PATH for uv tools). Shows instructions for user to run `aftr setup` in a new terminal.
 - **scripts/setup-github.ts**: GitHub configuration script (TypeScript with bun). Sets up branch protection, required reviews, status checks, and secrets for publishing.
 - **tests/test-setup.ps1**: Test runner using Windows Sandbox to validate setup.ps1 in isolation.
 
@@ -125,6 +125,7 @@ uv run pytest tests/ -v
 - Interactive configuration (AI tools, SSH keys) is handled by aftr in a separate step
 - Setup flow: shell bootstrap → TypeScript setup → user runs `aftr setup` in new terminal
 - The TypeScript setup script uses full paths to `uv` and `aftr` since they may not be in PATH during initial setup
+- Shell profiles MUST add ~/.local/bin (Unix) or %USERPROFILE%\.local\bin (Windows) to PATH for uv-installed tools like aftr to work
 
 ### Project Tools
 - Project scaffolding follows opinionated structure: data/, notebooks/, outputs/, src/
