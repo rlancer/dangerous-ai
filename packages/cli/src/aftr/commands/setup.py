@@ -1,8 +1,6 @@
 """Setup command - configure AI tools and SSH keys after environment setup."""
 
-import os
 import subprocess
-import sys
 from pathlib import Path
 
 import typer
