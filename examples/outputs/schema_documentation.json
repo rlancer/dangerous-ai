@@ -1,0 +1,87 @@
+{
+  "schema": {
+    "VendorID": {
+      "description": "TPEP provider (1=Creative Mobile Technologies, 2=VeriFone Inc.)",
+      "type": "Integer"
+    },
+    "tpep_pickup_datetime": {
+      "description": "Date and time when the meter was engaged",
+      "type": "Timestamp"
+    },
+    "tpep_dropoff_datetime": {
+      "description": "Date and time when the meter was disengaged",
+      "type": "Timestamp"
+    },
+    "passenger_count": {
+      "description": "Number of passengers in the vehicle (driver entered value)",
+      "type": "Integer"
+    },
+    "trip_distance": {
+      "description": "Trip distance in miles reported by the taximeter",
+      "type": "Float"
+    },
+    "RatecodeID": {
+      "description": "Rate code (1=Standard, 2=JFK, 3=Newark, 4=Nassau/Westchester, 5=Negotiated, 6=Group ride)",
+      "type": "Integer"
+    },
+    "store_and_fwd_flag": {
+      "description": "Trip record held in vehicle memory before sending (Y=store and forward, N=not)",
+      "type": "String"
+    },
+    "PULocationID": {
+      "description": "TLC Taxi Zone where the meter was engaged",
+      "type": "Integer",
+      "note": "Critical for congestion pricing analysis"
+    },
+    "DOLocationID": {
+      "description": "TLC Taxi Zone where the meter was disengaged",
+      "type": "Integer",
+      "note": "Critical for congestion pricing analysis"
+    },
+    "payment_type": {
+      "description": "Payment method (1=Credit card, 2=Cash, 3=No charge, 4=Dispute, 5=Unknown, 6=Voided)",
+      "type": "Integer"
+    },
+    "fare_amount": {
+      "description": "Time-and-distance fare calculated by the meter",
+      "type": "Float"
+    },
+    "extra": {
+      "description": "Miscellaneous extras and surcharges (rush hour, overnight)",
+      "type": "Float"
+    },
+    "mta_tax": {
+      "description": "$0.50 MTA tax automatically triggered based on metered rate",
+      "type": "Float"
+    },
+    "tip_amount": {
+      "description": "Tip amount (automatically populated for credit card, cash tips not included)",
+      "type": "Float"
+    },
+    "tolls_amount": {
+      "description": "Total amount of all tolls paid in trip",
+      "type": "Float"
+    },
+    "improvement_surcharge": {
+      "description": "$0.30 improvement surcharge assessed on hailed trips",
+      "type": "Float"
+    },
+    "total_amount": {
+      "description": "Total amount charged to passengers (does not include cash tips)",
+      "type": "Float"
+    },
+    "congestion_surcharge": {
+      "description": "Congestion surcharge for trips in Manhattan south of 96th Street",
+      "type": "Float",
+      "note": "Introduced in 2019 - may not be present in older files"
+    },
+    "airport_fee": {
+      "description": "$1.25 fee for pickups at LaGuardia and JFK airports",
+      "type": "Float",
+      "note": "Added in more recent data - may not be present in older files"
+    }
+  },
+  "columns": [],
+  "data_types": [],
+  "generated_at": "2026-01-01T14:17:04.171358"
+}
