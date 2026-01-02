@@ -20,6 +20,7 @@
     "brew": ["oven-sh/bun"]
   },
   "mise_tools": ["uv"],
+  "uv_tools": ["aftr"],
   "bun_global": [
     "@anthropic-ai/claude-code",
     "@openai/codex",

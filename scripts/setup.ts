@@ -53,6 +53,7 @@ const scriptDir = import.meta.dir;
 
 interface Config {
   mise_tools: string[];
+  uv_tools: string[];
   bun_global: string[];
 }
 
@@ -114,6 +115,28 @@ async function installMiseTools() {
         console.log(yellow(`  Warning: Failed to install ${tool} via mise (exit code: ${error.exitCode || 'unknown'})`));
         console.log(gray(`  You can manually install later with: mise use -g ${tool}`));
         // Continue with other tools instead of failing completely
+      }
+    }
+  }
+}
+
+// Install uv tools
+async function installUvTools() {
+  console.log(yellow("\nInstalling uv tools..."));
+
+  for (const tool of config.uv_tools) {
+    // Check if tool is already installed
+    if (await commandExists(tool)) {
+      console.log(gray(`  ${tool} already installed`));
+    } else {
+      console.log(gray(`  Installing ${tool}...`));
+      try {
+        await $`uv tool install ${tool}`;
+        console.log(green(`  ${tool} installed successfully`));
+      } catch (err: unknown) {
+        const error = err as { exitCode?: number; stderr?: string };
+        console.log(yellow(`  Warning: Failed to install ${tool} via uv (exit code: ${error.exitCode || 'unknown'})`));
+        console.log(gray(`  You can manually install later with: uv tool install ${tool}`));
       }
     }
   }
@@ -274,6 +297,16 @@ async function showSummary() {
     console.log(gray("  (unable to list)"));
   }
 
+  console.log(yellow("\nUV tools:"));
+  try {
+    const uvList = await $`uv tool list`.text();
+    uvList.split("\n").forEach((line) => {
+      if (line.trim()) console.log(gray(`  ${line}`));
+    });
+  } catch {
+    console.log(gray("  (unable to list)"));
+  }
+
   console.log(yellow("\nBun global packages:"));
   try {
     const bunList = await $`bun pm ls -g`.text();
@@ -290,6 +323,7 @@ async function main() {
   console.log(cyan("Continuing setup with bun..."));
 
   await installMiseTools();
+  await installUvTools();
   await installBunGlobals();
   await configureProfiles();
   await showSummary();
