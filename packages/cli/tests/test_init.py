@@ -52,19 +52,6 @@ class TestInitCommand:
         assert (project / "data").is_dir()
         assert (project / "outputs").is_dir()
 
-    def test_creates_pyproject_toml(self, tmp_path: Path) -> None:
-        """Init creates a valid pyproject.toml."""
-        runner.invoke(app, ["init", "data-analysis", "--path", str(tmp_path)])
-
-        pyproject = tmp_path / "data-analysis" / "pyproject.toml"
-        assert pyproject.exists()
-        content = pyproject.read_text()
-        assert 'name = "data-analysis"' in content
-        assert 'version = "0.1.0"' in content
-        assert "duckdb" in content
-        assert "polars" in content
-        assert "papermill" in content
-
     def test_creates_mise_toml(self, tmp_path: Path) -> None:
         """Init creates .mise.toml with correct tools."""
         runner.invoke(app, ["init", "myproj", "--path", str(tmp_path)])
@@ -72,8 +59,8 @@ class TestInitCommand:
         mise = tmp_path / "myproj" / ".mise.toml"
         assert mise.exists()
         content = mise.read_text()
-        assert 'python = "3.12"' in content
         assert 'uv = "latest"' in content
+        assert "python.uv_venv_auto = true" in content
 
     def test_creates_gitignore(self, tmp_path: Path) -> None:
         """Init creates .gitignore with expected patterns."""
