@@ -20,9 +20,6 @@
     "brew": ["oven-sh/bun"]
   },
   "mise_tools": ["uv"],
-  "bun_global": [
-    "@anthropic-ai/claude-code",
-    "@openai/codex",
-    "@google/gemini-cli"
-  ]
+  "uv_tools": ["aftr"],
+  "bun_global": []
 }
