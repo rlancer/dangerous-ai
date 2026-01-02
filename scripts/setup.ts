@@ -166,6 +166,9 @@ async function configureProfiles() {
 
   if (isWindows) {
     const profileContent = `
+# Add uv tools to PATH
+$env:PATH = "$env:USERPROFILE\\.local\\bin;" + $env:PATH
+
 # Initialize starship prompt
 Invoke-Expression (&starship init powershell)
 
@@ -184,7 +187,7 @@ mise activate pwsh | Out-String | Invoke-Expression
     if (!existsSync(pwshProfile)) {
       writeFileSync(pwshProfile, profileContent, "utf-8");
       console.log(gray("  Created PowerShell Core profile"));
-    } else if (!readFileSync(pwshProfile, "utf-8").includes("starship init")) {
+    } else if (!readFileSync(pwshProfile, "utf-8").includes(".local\\bin")) {
       appendFileSync(pwshProfile, profileContent);
       console.log(gray("  Updated PowerShell Core profile"));
     } else {
@@ -202,7 +205,7 @@ mise activate pwsh | Out-String | Invoke-Expression
     if (!existsSync(winPsProfile)) {
       writeFileSync(winPsProfile, profileContent, "utf-8");
       console.log(gray("  Created Windows PowerShell profile"));
-    } else if (!readFileSync(winPsProfile, "utf-8").includes("starship init")) {
+    } else if (!readFileSync(winPsProfile, "utf-8").includes(".local\\bin")) {
       appendFileSync(winPsProfile, profileContent);
       console.log(gray("  Updated Windows PowerShell profile"));
     } else {
@@ -211,6 +214,9 @@ mise activate pwsh | Out-String | Invoke-Expression
   } else {
     // macOS/Linux - configure zsh
     const profileContent = `
+# Add uv tools to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
 # Initialize mise
 eval "$(mise activate zsh)"
 
@@ -223,7 +229,7 @@ eval "$(starship init zsh)"
     if (!existsSync(zshrc)) {
       writeFileSync(zshrc, profileContent, "utf-8");
       console.log(gray("  Created .zshrc"));
-    } else if (!readFileSync(zshrc, "utf-8").includes("starship init")) {
+    } else if (!readFileSync(zshrc, "utf-8").includes(".local/bin")) {
       appendFileSync(zshrc, profileContent);
       console.log(gray("  Updated .zshrc"));
     } else {
