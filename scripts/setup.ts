@@ -105,9 +105,22 @@ async function installMiseTools() {
   }
 }
 
+// Get the path to uv executable via mise
+async function getUvPath(): Promise<string> {
+  try {
+    const uvPath = await $`mise where uv`.text();
+    return isWindows ? join(uvPath.trim(), "uv.exe") : join(uvPath.trim(), "bin", "uv");
+  } catch {
+    throw new Error("Could not find uv installation via mise");
+  }
+}
+
 // Install uv tools
 async function installUvTools() {
   console.log(yellow("\nInstalling uv tools..."));
+
+  // Get uv path from mise since it may not be in PATH yet
+  const uvPath = await getUvPath();
 
   for (const tool of config.uv_tools) {
     // Check if tool is already installed
@@ -116,7 +129,7 @@ async function installUvTools() {
     } else {
       console.log(gray(`  Installing ${tool}...`));
       try {
-        await $`uv tool install ${tool}`;
+        await $`${uvPath} tool install ${tool}`;
         console.log(green(`  ${tool} installed successfully`));
       } catch (err: unknown) {
         const error = err as { exitCode?: number; stderr?: string };
@@ -219,6 +232,15 @@ eval "$(starship init zsh)"
   }
 }
 
+// Get the path to aftr executable (installed via uv tool)
+async function getAftrPath(): Promise<string> {
+  // UV installs tools to ~/.local/bin on both platforms
+  const uvToolsBin = isWindows
+    ? join(home, ".local", "bin", "aftr.exe")
+    : join(home, ".local", "bin", "aftr");
+  return uvToolsBin;
+}
+
 // Run aftr setup for AI CLI and SSH key configuration
 async function runAftrSetup() {
   console.log(cyan("\n=== Finalizing Setup ==="));
@@ -226,11 +248,14 @@ async function runAftrSetup() {
   console.log(gray("(This will prompt you to select AI CLI tools and configure SSH keys)\n"));
 
   try {
-    await $`aftr setup`;
+    // Use full path to aftr since uv tools bin may not be in PATH yet
+    const aftrPath = await getAftrPath();
+    await $`${aftrPath} setup`;
   } catch (err: unknown) {
     const error = err as { exitCode?: number };
     console.log(yellow(`\nNote: aftr setup exited with code ${error.exitCode || 'unknown'}`));
     console.log(gray("You can run 'aftr setup' manually later to configure AI tools and SSH keys"));
+    console.log(gray("Restart your shell first, then run: aftr setup"));
   }
 }
 
@@ -250,7 +275,9 @@ async function showSummary() {
 
   console.log(yellow("\nUV tools:"));
   try {
-    const uvList = await $`uv tool list`.text();
+    // Use full path to uv since it may not be in PATH yet
+    const uvPath = await getUvPath();
+    const uvList = await $`${uvPath} tool list`.text();
     uvList.split("\n").forEach((line) => {
       if (line.trim()) console.log(gray(`  ${line}`));
     });
